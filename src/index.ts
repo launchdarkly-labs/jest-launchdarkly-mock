@@ -14,6 +14,10 @@ import camelCase from 'lodash.camelcase'
 import { LDFlagSet } from 'launchdarkly-js-sdk-common'
 import { useFlags, useLDClient, withLDConsumer, withLDProvider } from 'launchdarkly-react-client-sdk'
 
+type mockFlagsOptions = {
+  skipFormatting?: boolean
+}
+
 const mockUseFlags = useFlags as jest.Mock
 const mockUseLDClient = useLDClient as jest.Mock
 const mockWithLDConsumer = withLDConsumer as jest.Mock
@@ -40,15 +44,21 @@ mockUseLDClient.mockImplementation(() => ldClientMock)
 mockWithLDConsumer.mockImplementation(() => () => null)
 mockWithLDProvider.mockImplementation(() => (children: any) => children)
 
-export const mockFlags = (flags: LDFlagSet) => {
+export const mockFlags = (flags: LDFlagSet, options?: mockFlagsOptions) => {
   mockUseFlags.mockImplementation(() => {
     const result: LDFlagSet = {}
-    Object.keys(flags).forEach((k) => {
-      const kebab = kebabCase(k)
-      const camel = camelCase(k)
-      result[kebab] = flags[k]
-      result[camel] = flags[k]
-    })
+    if (options?.skipFormatting) {
+      Object.keys(flags).forEach((k) => {
+        result[k] = flags[k]
+      })
+    } else {
+      Object.keys(flags).forEach((k) => {
+        const kebab = kebabCase(k)
+        const camel = camelCase(k)
+        result[kebab] = flags[k]
+        result[camel] = flags[k]
+      })
+    }
     return result
   })
 }
